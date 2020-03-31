@@ -13,26 +13,28 @@ from sklearn.naive_bayes import MultinomialNB, GaussianNB
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.linear_model import SGDClassifier,  
+from sklearn.linear_model import SGDClassifier  
 import numpy as np
 
 
 directory=r'C:\Users\benja\Documents\UVM\DS1\PR01_bdube\external-data\data' #change this to data folder
-
 
 def read_line(line):
     if '{' in line:
         dic=json.loads(line)
         x_val=dic['TXT']
         y_val=dic['ACTION']
+        return x_val, y_val
     elif line:
         try:
             data=line.split(',')
             x_val=','.join(data[:-1])
             y_val=data[-1]
+            return x_val, y_val
         except:
             print(line)
-    return x_val, y_val
+    return None, None
+        
             
 def load_additional_data(directory, X,y):
     '''Load Training Data From Folder'''
@@ -66,7 +68,8 @@ X,y=load_additional_data(directory, X,y)
 
 methods=[
         MultinomialNB, 
-        SGDClassifier,   
+        SGDClassifier,
+        
              ]
 
 
@@ -80,13 +83,13 @@ for n in range(5):
         print('\n\n\n')
         print(method.__name__)
         model=Pipeline([
-...         ('vect', CountVectorizer()),
-...         ('tfidf', TfidfTransformer()),
-...         ('clf', method())
+        ('vect', CountVectorizer()),
+      ('tfidf', TfidfTransformer()),
+        ('clf', method())
             ])
         
-        model.fit(X_train_tf, y_train)
-        predicted= model.predict(X_test_tf)
+        model.fit(X_train, y_train)
+        predicted= model.predict(X_test)
         
         precision, recall, fbeta_score, _=sklearn.metrics.precision_recall_fscore_support(
                                                 y_test, predicted, average='weighted')

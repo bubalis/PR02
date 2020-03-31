@@ -257,21 +257,6 @@ def testDB():
 
 #%%
 if __name__ == "__main__":
-    token=load_token('token.txt') #load token 
-    websocket.enableTrace(True)
+    J=bot(database=DATABASE('scratch.db')) 
     
-    model=Pipeline([
-     ('vect', CountVectorizer()),
-     ('tfidf', TfidfTransformer()),
-     ('clf', MultinomialNB())
-     ])
-    response=requests.get(f'https://slack.com/api/rtm.connect?token={token}&pretty=1').json() #get url from auth token
-    url=response['url'].replace('\/', '/') #clean url
-    ws = websocket.WebSocketApp(url=url,
-                             on_open= on_open,
-                             on_message = on_message,
-                             on_error = on_error,
-                             on_close = on_close)
-    J=bot(database=DATABASE('jarvis.db'), ws=ws, model=model) #create jarvis
-    ws.on_open = on_open
-    ws.run_forever()
+    
