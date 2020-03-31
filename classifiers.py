@@ -45,7 +45,9 @@ def load_additional_data(directory, X,y):
     all_ys=[]
     old_dir=os.getcwd()
     os.chdir(directory)
-    for filename in [f for f in os.listdir() if '.DS_Store' not in f and f not in bad_files]:
+    for filename in [f for f in os.listdir() if '.DS_Store' not in f 
+                     and f not in bad_files
+                     ]:
         with open(filename) as file:
             for line in file.read().split('\n'):
                 x_val, y_val=read_line(line)

@@ -40,11 +40,7 @@ def spellcheckwords(string, spell):
     return string
 
 def array_spellchecker(array, spell):
-    new_rows=[]
-    for row in array:
-        new_row=[spellcheckwords(string, spell) for string in row]
-        new_rows.append(new_row)
-    return np.array(new_rows)
+        return np.array([spellcheckwords(string, spell) for string in array[0]])
             
 
 def read_line(line):
@@ -77,19 +73,14 @@ def load_additional_data(directory, X,y):
                 if str(y_val).upper() in actions and x_val not in X:
                     X.append(x_val)
                     y.append(str(y_val).upper())
-                if str(y_val).upper() not in actions:
-                    print(f'{filename}  is wrong')
-                    print(str(y_val).upper())
+
     os.chdir(old_dir)
     return X,y, set(all_ys)
 
 J=bot(database=DATABASE('jarvis.db'), 
       model=None)
 
-X,y=[],[]
-
 X,y=J.database.table2Lists()
-print(X)
 
 actions=['GREET',
  'JOKE',
@@ -102,16 +93,6 @@ print(all_ys)
 #%%
 
 #%%
-docs_new = [['God is love', 'OpenGL on the GPU is fast']]
-docs_new=FunctionTransformer(array_spellchecker, kw_args={'spell':spell}).transform(docs_new)
-X_new_counts = CountVectorizer().transform(docs_new)
-X_new_tfidf = tfidf_transformer.transform(X_new_counts)
-#%%
-
-
-predicted = clf.predict(X_new_tfidf)
-
-
 
 
 
@@ -121,12 +102,6 @@ methods=[
         SGDClassifier,
         
              ]
-
-
-
-
-
-
 
 results={method.__name__: [] for method in methods}
 
@@ -138,14 +113,14 @@ for n in range(5):
         print('\n\n\n')
         print(method.__name__)
         model=Pipeline([
-                ('spell', FunctionTransformer(spellcheckwords, kw_args={'spell':spell})), 
+                ('spell', FunctionTransformer(array_spellchecker, kw_args={'spell':spell})), 
         ('vect', CountVectorizer()),
       ('tfidf', TfidfTransformer()),
         ('clf', method())
             ])
         
-        model.fit(X_train, y_train)
-        predicted= model.predict(X_test)
+        model.fit([X_train], y_train)
+        predicted= model.predict([X_test])
         
         precision, recall, fbeta_score, _=sklearn.metrics.precision_recall_fscore_support(
                                                 y_test, predicted, average='weighted')
