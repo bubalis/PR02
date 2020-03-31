@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Tue Mar 31 10:56:18 2020
+
+@author: benja
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Mon Mar 30 17:05:23 2020
 
 @author: benja
@@ -15,13 +22,30 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import SGDClassifier  
 import numpy as np
+from spellchecker import SpellChecker
 from sklearn.preprocessing import FunctionTransformer
 
 
 directory=r'C:\Users\benja\Documents\UVM\DS1\PR01_bdube\external-data\data' #change this to data folder
 
-bad_files=open("bad_files.txt").read().split('\n')    
-#%%
+spell=SpellChecker()
+
+
+            
+
+def spellcheckwords(string, spell):
+    misspelled=spell.unknown(string.split())
+    for word in misspelled:
+        string=string.replace(word, spell.correction(word))
+    return string
+
+def array_spellchecker(array, spell):
+    new_rows=[]
+    for row in array:
+        new_row=[spellcheckwords(string, spell) for string in row]
+        new_rows.append(new_row)
+    return np.array(new_rows)
+            
 
 def read_line(line):
     if '{' in line:
@@ -45,7 +69,7 @@ def load_additional_data(directory, X,y):
     all_ys=[]
     old_dir=os.getcwd()
     os.chdir(directory)
-    for filename in [f for f in os.listdir() if '.DS_Store' not in f and f not in bad_files]:
+    for filename in [f for f in os.listdir() if '.DS_Store' not in f]:
         with open(filename) as file:
             for line in file.read().split('\n'):
                 x_val, y_val=read_line(line)
@@ -53,6 +77,9 @@ def load_additional_data(directory, X,y):
                 if str(y_val).upper() in actions and x_val not in X:
                     X.append(x_val)
                     y.append(str(y_val).upper())
+                if str(y_val).upper() not in actions:
+                    print(f'{filename}  is wrong')
+                    print(str(y_val).upper())
     os.chdir(old_dir)
     return X,y, set(all_ys)
 
@@ -74,12 +101,31 @@ X,y, all_ys=load_additional_data(directory, X,y)
 print(all_ys)
 #%%
 
+#%%
+docs_new = [['God is love', 'OpenGL on the GPU is fast']]
+docs_new=FunctionTransformer(array_spellchecker, kw_args={'spell':spell}).transform(docs_new)
+X_new_counts = CountVectorizer().transform(docs_new)
+X_new_tfidf = tfidf_transformer.transform(X_new_counts)
+#%%
+
+
+predicted = clf.predict(X_new_tfidf)
+
+
+
+
+
 
 methods=[
         MultinomialNB, 
         SGDClassifier,
         
              ]
+
+
+
+
+
 
 
 results={method.__name__: [] for method in methods}
@@ -92,6 +138,7 @@ for n in range(5):
         print('\n\n\n')
         print(method.__name__)
         model=Pipeline([
+                ('spell', FunctionTransformer(spellcheckwords, kw_args={'spell':spell})), 
         ('vect', CountVectorizer()),
       ('tfidf', TfidfTransformer()),
         ('clf', method())
@@ -114,5 +161,4 @@ for key, value in results.items():
 print('\n\n')
 
 for key, value in results.items():
-    print(key, np.mean([item['Precision'] for item in value]))          
-        
+    print(key, np.mean([item['Precision'] for item in value]))
